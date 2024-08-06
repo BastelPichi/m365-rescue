@@ -121,7 +121,7 @@ class OpenOcd:
    word_length, address, count))
 
   raw = self.send('return $%s' % self._tcl_variable).split(' ')
-
+  print(raw)
   base = 10
   if raw[-1].startswith("0x"):
     base = 16
