@@ -81,7 +81,14 @@ class Flasher(object):
         print("reading UUID...")
         if self.oocd:
             self.UUID = self.oocd.read_memory(0x1FFFF7E8, 3)
-        print("UUID (chip): %08x %08x %08x" % (self.UUID[0], self.UUID[1], self.UUID[2]))
+        print("UUID (chip): %s" % " ".join([Util.word2bytes(uuid).hex() for uuid in self.UUID]))
+        
+    def set_uuid(self, uuid):
+        uuid = bytes.fromhex(args.uuid)
+        flasher.UUID[0] = unpack("<L", uuid[:4])[0]
+        flasher.UUID[1] = unpack("<L", uuid[4:8])[0]
+        flasher.UUID[2] = unpack("<L", uuid[8:])[0]
+        print("UUID (user): %s" % " ".join([Util.word2bytes(uuid).hex() for uuid in flasher.UUID]))
 
     def prep_data(self, serial="00000/0000000", km=0):
         print("preparing sooter data...")
@@ -213,7 +220,7 @@ class Flasher(object):
                 return
 
 
-            print("UUID (flash): %08x %08x %08x" % (UUID2[0], UUID2[1], UUID2[2]))
+            print("UUID (flash): %s" % " ".join([Util.word2bytes(uuid).hex() for uuid in UUID2]))
             self.oocd.send("reset")
             if self.UUID[0] == UUID2[0] and self.UUID[1] == UUID2[1] and self.UUID[2] == UUID2[2]:
                 print("verify UUID success")
@@ -269,10 +276,7 @@ if __name__ == "__main__":
         if not args.uuid:
             flasher.read_uuid()
         else:
-            uuid = bytes.fromhex(args.uuid)
-            flasher.UUID[0] = unpack("<L", uuid[:4])[0]
-            flasher.UUID[1] = unpack("<L", uuid[4:8])[0]
-            flasher.UUID[2] = unpack("<L", uuid[8:])[0]
+            flasher.set_uuid(args.uuid)
 
         flasher.prep_data(serial=args.sn, km=args.km)
         flasher.flash_esc(nb=args.nb, gd32=args.gd32, at32=args.at32, remove_rdp=args.nordp)
